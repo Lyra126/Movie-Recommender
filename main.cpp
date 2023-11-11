@@ -6,6 +6,17 @@
 
 using namespace std;
 
+
+void rankMovies(User& user, map& movieData, priorityQueue& pq){
+    //implement algorithm to rank movies
+    string movie;
+    pq.insert(movie, 0);
+}
+
+void storeRankings(priorityQueue& pq){
+    //create json files based on rankings and send them to a database
+}
+
 int main(){
     //parse json files from OMDb API and make user object
     //Using the Web UI to get user preferences and storing those in a map?
@@ -28,12 +39,3 @@ int main(){
     storeRankings(pq);
 }
 
-void rankMovies(User& user, map& movieData, priorityQueue& pq){
-    //implement algorithm to rank movies
-    string movie;
-    pq.insert(movie);
-}
-
-void storeRankings(priorityQueue& pq){
-    //create json files based on rankings and send them to a database
-}
