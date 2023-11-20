@@ -26,7 +26,7 @@ int main() {
     // Number of movies to fetch
     int numMovies = 100;
 
-    // Data structure to store movie information (you might want to define your own data structure)
+    // Data structure to store movie information
     vector<map<string, string>> movies;
 
     // Fetch information for each movie
