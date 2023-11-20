@@ -2,14 +2,35 @@
 #include <cpr/cpr.h>
 #include <vector>
 #include <json/json.h>
-#include <map>
+#include <map> //remove this later!!!
 #include "mapGraph.h"
 #include "user.h"
+#include "movie.h"
 #include "priorityQueue.h"
+#include "userInput.h"
 using namespace std;
 
-//put the data structure used to store the movieData in here eventually
-void rankMovies(User& user, priorityQueue& pq){
+int eachPrefRank(userInput& user) {
+    int a = 0;
+    a += user.yearRate(user.yearReleased);
+    a += user.genderRate(user.gender);
+    a += user.lengthRate(user.length);
+    a += user.ratingRate(user.rating);
+    a += user.seasonRate(user.season);
+    vector<int> var = user.genreRate(user.genres);
+    for(int i = 0; i < var.size(); i++) {
+        a += var[i];
+    }
+    return a;
+}
+
+void rankIt(userInput& user, vector<map<string, string> >  movieData, priorityQueue& pq) {
+    string movie;
+    int theRank;
+    theRank = eachPrefRank(user);
+    pq.insert(movie, theRank);
+}
+void rankMovies(User& user, vector<map<string, string> > movies, priorityQueue& pq){
     //implement algorithm to rank movies
     string movie;
     pq.insert(movie, 0);
@@ -27,7 +48,7 @@ int main() {
     int numMovies = 100;
 
     // Data structure to store movie information
-    vector<map<string, string>> movies;
+    vector<map<string, string>> movies; //the vector of maps will be a temporary placeholder while i coode up the map data structure
 
     // Fetch information for each movie
     for (int i = 0; i < numMovies; ++i) {
@@ -73,11 +94,19 @@ int main() {
     vector<string> languages;
     User user(startYear, endYear, rating, runtime, genres, languages);
 
+     //userInput
+    //user chooses their preference, which are assigned numbers then translated into strings
+    string year, mf, rate, size, seasons;
+    vector<string> someGenres;
+    userInput userInput(year, mf, rate, size, seasons, someGenres);
+
     //rank movies according to preferences and store rankings in priority queue
     priorityQueue pq;
-    rankMovies(user, pq);
+    rankMovies(user, movies, pq);
+    rankIt(userInput, movies, pq);
 
     //output json files and put them in a database so the web UI and get them and display them
     storeRankings(pq);
     return 0;
 }
+
