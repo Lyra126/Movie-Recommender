@@ -2,13 +2,14 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "movie.h"
 using namespace std;
 
 
-class map{
+class mapGraph{
     private:
-        
+        vector<Movie> graph;
     public:
-        map(){}
+        mapGraph(){}
 
 };
