@@ -24,13 +24,13 @@ int eachPrefRank(userInput& user) {
     return a;
 }
 
-void rankIt(userInput& user, vector<map<string, string> >  movieData, priorityQueue& pq) {
+void rankIt(userInput& user, map<string, Movie>  movieData, priorityQueue& pq) {
     string movie;
     int theRank;
     theRank = eachPrefRank(user);
     pq.insert(movie, theRank);
 }
-void rankMovies(User& user, vector<map<string, string> > movies, priorityQueue& pq){
+void rankMovies(User& user, map<string, Movie> movies, priorityQueue& pq){
     //implement algorithm to rank movies
     string movie;
     pq.insert(movie, 0);
@@ -48,7 +48,7 @@ int main() {
     int numMovies = 100;
 
     // Data structure to store movie information
-    vector<map<string, string>> movies; //the vector of maps will be a temporary placeholder while i coode up the map data structure
+    map<string, Movie> movies; //the vector of maps will be a temporary placeholder while i coode up the map data structure
 
     // Fetch information for each movie
     for (int i = 0; i < numMovies; ++i) {
@@ -57,7 +57,6 @@ int main() {
 
         // Construct the API request URL
         string requestUrl = apiUrl + "?i=%20" + imdbId + "&apikey=" + apiKey;
-        cout << requestUrl << endl;
 
         // Make the HTTP request
         auto response = cpr::Get(cpr::Url{requestUrl});
@@ -69,21 +68,14 @@ int main() {
         Json::parseFromStream(jsonReader, jsonStream, &jsonData, nullptr);
 
         // Check if the request was successful
-        if (jsonData["Response"].asString() == "True") {
-            // Store movie information in your data structure
-            movies.push_back({
-                {"Title", jsonData["Title"].asString()},
-                {"Year", jsonData["Year"].asString()},
-                {"Genre", jsonData["Genre"].asString()},
-                // Add other fields you need
-            });
-        } else {
-            std::cout << "Error fetching movie with IMDb ID " << imdbId << " - " << jsonData["Error"].asString() << std::endl;
-        }
+        if (jsonData["Response"].asString() == "True")
+            movies[jsonData["Title"].asString()] = Movie(jsonData["Title"].asString(), jsonData["Year"].asString(), jsonData["Rated"].asString(),jsonData["Released"].asString(), jsonData["Runtime"].asString(), jsonData["Poster"].asString(), jsonData["Genre"].asString(), jsonData["Language"].asString() );
+        else 
+            cout << "Error fetching movie with IMDb ID " << imdbId << " - " << jsonData["Error"].asString() << std::endl;
     }
     //checking if the code above actually stored anything
-    for (const auto& movie : movies)
-        std::cout << "Title: " << movie.at("Title") << std::endl;
+    //for (const auto& pair : movies)
+    //    pair.second.toString();
 
     //make user object and use Web UI to get user preferences and storing those in a map
     string startYear;
@@ -94,7 +86,7 @@ int main() {
     vector<string> languages;
     User user(startYear, endYear, rating, runtime, genres, languages);
 
-     //userInput
+    //userInput
     //user chooses their preference, which are assigned numbers then translated into strings
     string year, mf, rate, size, seasons;
     vector<string> someGenres;
