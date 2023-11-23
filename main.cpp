@@ -2,7 +2,8 @@
 #include <cpr/cpr.h>
 #include <vector>
 #include <json/json.h>
-#include <map> //remove this later!!!
+#include <map>
+#include <fstream>
 #include "mapGraph.h"
 #include "user.h"
 #include "movie.h"
@@ -36,8 +37,20 @@ void rankMovies(User& user, map<string, Movie> movies, priorityQueue& pq){
     pq.insert(movie, 0);
 }
 
-void storeRankings(priorityQueue& pq){
-    //create json files based on rankings and send them to a database
+//create json files based on rankings and send them to a database
+void storeRankings(priorityQueue& pq) {
+    ofstream file("movieRecs.json");
+
+    // Loop through the movies in the priority queue
+    while (!pq.isEmpty()) {
+        movieNode movie = pq.deleteMax();
+
+        // Write JSON object for each movie
+        file << "{\"movieTitle\":\"" << movie.getMovie() << "\", ";
+        file << "\"rank\":" << movie.getRank() << "}" << endl;
+    }
+
+    file.close();
 }
 
 int main() {
