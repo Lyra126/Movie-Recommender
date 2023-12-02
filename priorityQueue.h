@@ -8,25 +8,74 @@ struct movieNode{
     string movie;
     int rank;
 
+    int year;
+    string rating;
+    vector<string> genres;
+    string country;
+    vector<string> directors;
+    vector<string> writers;
+    vector<string> actors;
+    string plot;
+    string awards;
+    string metascore;
+    string boxOffice;
+    string DVD;
+    string poster;
+
     public:
         //constructors
-        movieNode(): movie(""), rank(0){}
-        movieNode(string movie, int rank){
+        movieNode(): movie(""), rank(0), year(0), rating(""), country(""), plot(""), awards(""), metascore(""), boxOffice(""), DVD(""), poster(""){}
+        movieNode(string movie, int rank, int year, string rating, vector<string> genres, string country, vector<string> directors, vector<string> writers, vector<string> actors, string plot, string awards, string metascore, string boxOffice, string DVD, string poster){
             this->movie = movie;
             this->rank = rank;
+            this->year = year;
+            this->rating = rating;
+            this->genres = genres;
+            this->country = country;
+            this->directors = directors;
+            this->writers = writers;
+            this->actors = actors;
+            this->plot = plot;
+            this->awards = awards;
+            this->metascore = metascore;
+            this->boxOffice = boxOffice;
+            this->DVD = DVD;
+            this->poster = poster;
         }
 
-        string getMovie() const
-            {return movie;}
+         // Accessors
+        string getMovie() const { return movie; }
+        int getRank() const { return rank; }
+        int getYear() const { return year; }
+        string getRating() const { return rating; }
+        vector<string> getGenres() const { return genres; }
+        string getCountry() const { return country; }
+        vector<string> getDirectors() const { return directors; }
+        vector<string> getWriters() const { return writers; }
+        vector<string> getActors() const { return actors; }
+        string getPlot() const { return plot; }
+        string getAwards() const { return awards; }
+        string getMetascore() const { return metascore; }
+        string getBoxOffice() const { return boxOffice; }
+        string getDVD() const { return DVD; }
+        string getPoster() const { return poster; }
 
-        int getRank() const
-            {return rank;}
-
-        void setMovie(string movie)
-            {this->movie = movie;}
-
-        void setRank(int rank)
-            {this->rank = rank;}
+        // Mutators
+        void setMovie(string movie) { this->movie = movie; }
+        void setRank(int rank) { this->rank = rank; }
+        void setYear(int year) { this->year = year; }
+        void setRating(string rating) { this->rating = rating; }
+        void setGenres(vector<string> genres) { this->genres = genres; }
+        void setCountry(string country) { this->country = country; }
+        void setDirectors(vector<string> directors) { this->directors = directors; }
+        void setWriters(vector<string> writers) { this->writers = writers; }
+        void setActors(vector<string> actors) { this->actors = actors; }
+        void setPlot(string plot) { this->plot = plot; }
+        void setAwards(string awards) { this->awards = awards; }
+        void setMetascore(string metascore) { this->metascore = metascore; }
+        void setBoxOffice(string boxOffice) { this->boxOffice = boxOffice; }
+        void setDVD(string DVD) { this->DVD = DVD; }
+        void setPoster(string poster) { this->poster = poster; }
 };
 
 class priorityQueue{
@@ -44,7 +93,7 @@ class priorityQueue{
         bool isEmpty();
         int getSize();
         movieNode front();
-        void insert(string item, int rank);
+        void insert(const movieNode& newMovie);
         void heapifyUp(int index);
         void heapifyDown(int index);
         movieNode deleteMax();
@@ -63,10 +112,9 @@ movieNode priorityQueue::front(){
     return items[0];
 }
 
-void priorityQueue::insert(string item, int rank){
-    movieNode newMovie(item, rank);
+void priorityQueue::insert(const movieNode& newMovie) {
     items.push_back(newMovie);
-    heapifyUp(getSize()-1);
+    heapifyUp(getSize() - 1);
 }
 
 void priorityQueue::heapifyUp(int index){
@@ -113,7 +161,47 @@ void priorityQueue::heapifyDown(int index){
     }
 }
 
-void priorityQueue::print(){
-    for(const auto& movie : items)
-        cout << movie.getMovie() << ": " << movie.getRank() << endl;
+void priorityQueue::print() {
+    for (const auto& movie : items) {
+        cout << "Movie: " << movie.getMovie() << endl;
+        cout << "Rank: " << movie.getRank() << endl;
+        cout << "Year: " << movie.getYear() << endl;
+        cout << "Rating: " << movie.getRating() << endl;
+
+        cout << "Genres: ";
+        for (const auto& genre : movie.getGenres()) {
+            cout << genre << ", ";
+        }
+        cout << endl;
+
+        cout << "Country: " << movie.getCountry() << endl;
+
+        cout << "Directors: ";
+        for (const auto& director : movie.getDirectors()) {
+            cout << director << ", ";
+        }
+        cout << endl;
+
+        cout << "Writers: ";
+        for (const auto& writer : movie.getWriters()) {
+            cout << writer << ", ";
+        }
+        cout << endl;
+
+        cout << "Actors: ";
+        for (const auto& actor : movie.getActors()) {
+            cout << actor << ", ";
+        }
+        cout << endl;
+
+        cout << "Plot: " << movie.getPlot() << endl;
+        cout << "Awards: " << movie.getAwards() << endl;
+        cout << "Metascore: " << movie.getMetascore() << endl;
+        cout << "Box Office: " << movie.getBoxOffice() << endl;
+        cout << "DVD: " << movie.getDVD() << endl;
+        cout << "Poster: " << movie.getPoster() << endl;
+
+        cout << "------------------------" << endl;
+    }
 }
+
