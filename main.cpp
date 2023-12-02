@@ -1,12 +1,17 @@
 #include <iostream>
-#include <cpr/cpr.h>
 #include <vector>
-#include <json/json.h>
+#include <cpr/cpr.h>
 #include <map>
 #include <fstream>
+#include "httplib.h"
+#include "json.hpp"
+#include <json/json.h>
 #include "user.h"
 #include "movie.h"
-#include "userInput.h"
+#include "priorityQueue.h"
+
+using json = nlohmann::json;
+using namespace httplib;
 using namespace std;
 
 // Function to calculate the movie rank based on user preferences
@@ -14,8 +19,8 @@ int calculateMovieRank(const User user, const Movie movie) {
     int rank = 0;
 
     // Year preference (penalize movies that are not in the user's preferred years)
-    int yearDiffStart = abs(movie.getReleaseYear() - user.getStartYear());
-    int yearDiffEnd = abs(movie.getReleaseYear() - user.getEndYear());
+    int yearDiffStart = abs(movie.getYear() - user.getStartYear());
+    int yearDiffEnd = abs(movie.getYear() - user.getEndYear());
 
     if (yearDiffStart == 0 || yearDiffEnd == 0)
         rank += 30;  // Very high rank for movies released in the exact year of the user's start or end year
@@ -56,7 +61,6 @@ int calculateMovieRank(const User user, const Movie movie) {
         for (const string& movieGenre : movie.getGenres()) 
             if (userGenre == movieGenre) 
                 rank += 30; // Increase rank for each matching genre
-
     return rank;
 }
 
@@ -64,72 +68,149 @@ int calculateMovieRank(const User user, const Movie movie) {
 //implement algorithm to rank movies
 void rankMovies(User user, map<string, Movie> movies, priorityQueue& pq){
     //iterate through list of movies to process, storing only movie title and rank in priority queue
-    for(const auto& movie : movies)
-        pq.insert(movie.second.getTitle(), calculateMovieRank(user, movie.second));
+    for(const auto& movie : movies){
+        movieNode temp(
+        movie.second.getTitle(), // movie
+        calculateMovieRank(user, movie.second), // rank
+        movie.second.getYear(), // year
+        movie.second.getRated(), // rating
+        movie.second.getGenres(), // genres
+        movie.second.getCountry(), // country
+        movie.second.getDirectors(), // director
+        movie.second.getWriters(), // writer
+        movie.second.getActors(), // actor
+        movie.second.getPlot(), // plot
+        movie.second.getAwards(), // awards
+        movie.second.getMetaScore(), // metascore
+        movie.second.getBoxOffice(), // boxoffice
+        movie.second.getDVD(), // DVD
+        movie.second.getPoster() // poster
+    );
+        pq.insert(temp);
+    }
 }
 
 //create json files based on rankings and send them to a database
 void storeRankings(priorityQueue& pq) {
-    std::ofstream file("movieRecs.json");
-
+    ofstream file("movieRecs.json");
     // Loop through the movies in the priority queue
     while (!pq.isEmpty()) {
         movieNode movie = pq.deleteMax();
         // Write JSON object for each movie on a new line
-        file << "{ \"movieTitle\":\"" << movie.getMovie() << "\", \"rank\":" << movie.getRank() << "}" << std::endl;
+        file << "{ \"movieTitle\":\"" << movie.getMovie() << "\","
+             << "\"rank\":\"" << movie.getRank() << "\","
+             << "\"year\":\"" << movie.getYear() << "\","
+             << "\"rated\":\"" << movie.getRating() << "\","
+             << "\"genre\":\"" << movie.getGenres().front() << "\","
+             << "\"country\":\"" << movie.getCountry() << "\","
+             << "\"director\":\"" << movie.getDirectors().front() << "\","
+             << "\"writer\":\"" << movie.getWriters().front() << "\","
+             << "\"actor\":\"" << movie.getActors().front() << "\","
+             << "\"plot\":\"" << movie.getPlot() << "\","
+             << "\"awards\":\"" << movie.getAwards() << "\","
+             << "\"metascore\":\"" << movie.getMetascore() << "\","
+             << "\"boxoffice\":\"" << movie.getBoxOffice() << "\","
+             << "\"DVD\":\"" << movie.getDVD() << "\","
+             << "\"poster\":\"" << movie.getPoster() << "\"}" << endl;
     }
-
     file.close();
 }
 
+User handlePreferences() {
+    ifstream userPreferencesFile("userPreferences.txt");
+    if (!userPreferencesFile.is_open()) {
+        cerr << "Error opening user preferences file." << std::endl;
+        return User();  // Return a default User object or handle the error accordingly
+    }
+
+    User user;  // Create a User object to store preferences
+
+    string line;
+    while (getline(userPreferencesFile, line)) {
+        istringstream iss(line);
+        string key, value;
+
+        // Read key and value from each line
+        if (iss >> key >> std::ws >> std::quoted(value)) {
+            // Process the key-value pair as needed
+            if (key == "startYear")
+                user.setStartYear(value);
+            else if (key == "endYear")
+                user.setEndYear(value);
+            else if (key == "Rating")
+                user.setRating(value);
+            else if (key == "Runtime")
+                user.setRuntime(value);
+            else if (key == "Language")
+                user.setLanguage(value);
+            else if (key == "Genres")
+                user.setGenres(value);
+        } else
+            cerr << "Error parsing line: " << line << std::endl;
+    }
+    // Close the file
+    userPreferencesFile.close();
+    return user;
+}
+
+
 int main() {
-    string apiKey = "5a925008";
-    string apiUrl = "http://www.omdbapi.com/";
-
-    // Number of movies to fetch
-    int numMovies = 100;
-
     // Data structure to store movie information
     map<string, Movie> movies; //the vector of maps will be a temporary placeholder while i coode up the map data structure
-
-    // Fetch information for each movie
-    for (int i = 0; i < numMovies; ++i) {
-        // Generate a random IMDb ID (you might want to change this logic)
-        string imdbId = "tt" + to_string(rand() % 1000000 + 1000000);
-
-        // Construct the API request URL
-        string requestUrl = apiUrl + "?i=%20" + imdbId + "&apikey=" + apiKey;
-
-        // Make the HTTP request
-        auto response = cpr::Get(cpr::Url{requestUrl});
     
-        // Parse the JSON response
-        Json::Value jsonData;
-        Json::CharReaderBuilder jsonReader;
-        std::istringstream jsonStream(response.text);
-        Json::parseFromStream(jsonReader, jsonStream, &jsonData, nullptr);
-
-        // Check if the request was successful
-        if (jsonData["Response"].asString() == "True")
-            movies[jsonData["Title"].asString()] = Movie(jsonData["Title"].asString(), jsonData["Year"].asString(), jsonData["Rated"].asString(),jsonData["Released"].asString(), jsonData["Poster"].asString(), jsonData["Language"].asString(), jsonData["Runtime"].asString(), jsonData["Genre"].asString() );
-        else 
-            cout << "Error fetching movie with IMDb ID " << imdbId << " - " << jsonData["Error"].asString() << std::endl;
+    // Open the file
+    ifstream inputFile("movieInfo.txt");
+    if (!inputFile.is_open()) {
+        cerr << "Error opening the file." << endl;
+        return 1;
     }
+
+    // Read each line from the file
+    string line;
+    while (getline(inputFile, line)) {
+        // Parse the JSON data
+        Json::CharReaderBuilder jsonReader;
+        istringstream jsonStream(line);
+        Json::Value jsonData;
+
+        if (Json::parseFromStream(jsonReader, jsonStream, &jsonData, nullptr)) {
+            // Check if the parsed data is a valid movie entry
+            if (jsonData.isObject() && jsonData.isMember("Title")) {
+                // Create a Movie object and populate its attributes
+                Movie movie(
+                    jsonData["Title"].asString(),
+                    jsonData["Year"].asString(),
+                    jsonData["Rated"].asString(),
+                    jsonData["Released"].asString(),
+                    jsonData["Language"].asString(),
+                    jsonData["Country"].asString(),
+                    jsonData["Runtime"].asString(),
+                    jsonData["Genre"].asString(),
+                    jsonData["Director"].asString(),
+                    jsonData["Writer"].asString(),
+                    jsonData["Actors"].asString(),
+                    jsonData["Plot"].asString(),
+                    jsonData["Awards"].asString(),
+                    jsonData["Metascore"].asString(),
+                    jsonData["BoxOffice"].asString(),
+                    jsonData["DVD"].asString(),
+                    jsonData["Poster"].asString()
+                );
+
+                // Add the Movie object to the map
+                movies[movie.getTitle()] = movie;
+            }
+        } else 
+            cerr << "Error parsing JSON data: " << line << endl;
+    }
+
     //checking if the code above actually stored anything
     //for (const auto& pair : movies)
-     //   pair.second.toString();
+    //   pair.second.toString();
 
-
-    //make user object and use Web UI to get user preferences and storing those in a map
-    //user preferences are assigned numbers then translated into strings
-    string startYear; //earliest year they would like movie from
-    string endYear; //end year they would like movie from, default if not chosen is current time
-    string rating; //movie rating (i.e PG13)
-    string language; //what language do they speak/prefer
-    string runtime; //avg time they would like movie to be
-    string genreList; // list of genres they would like to see
-    //User user(startYear, endYear, rating, runtime, language, genreList);
-    User user = User("2000", "2023", "PG-13", "English", "60 mins", "Action, Comedy, Romance");
+    //gather user preferences
+    User user = handlePreferences();
+    cout << user.toString();
 
     //rank movies according to preferences and store rankings in priority queue
     priorityQueue pq;
