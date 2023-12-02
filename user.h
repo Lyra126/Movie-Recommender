@@ -19,7 +19,11 @@ class User{
         
     public:
         //default constructor
-        User(): startYear("1900"), endYear("2023"), rating("PG-13"), runtime(60), language("English"){}
+        User(): startYear("1900"), endYear("2023"), rating("PG-13"), runtime(60), language("English"){
+            genres.push_back("Action");
+            genres.push_back("Romance");
+            genres.push_back("Comedy");
+        }
         
         User(string startYear, string endYear, string rating, string runtimeStr, string language, string genreList){
             this->startYear = startYear;
@@ -81,5 +85,25 @@ class User{
             }
         }
 
-        
+    string toString() const {
+        stringstream ss;
+        ss << "Start Year: " << getStartYear() << "\n"
+        << "End Year: " << getEndYear() << "\n"
+        << "Rating: " << getRating() << "\n"
+        << "Language: " << getLanguage() << "\n"
+        << "Runtime: " << getRuntime() << " minutes\n"
+        << "Genres: ";
+
+        const auto& genres = getGenres();  // Store genres in a local variable
+
+        for (auto it = genres.begin(); it != genres.end(); ++it) {
+            ss << *it;
+            // Append a comma and space if there are more genres
+            if (next(it) != genres.end()) {
+                ss << ", ";
+            }
+        }
+
+        return ss.str();
+    }
 };
